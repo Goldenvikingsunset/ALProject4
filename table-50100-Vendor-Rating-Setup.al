@@ -51,7 +51,26 @@ table 50100 "Vendor Rating Setup"
         {
             Caption = 'Enable Vendor Points Scoring System';
         }
+        field(50100; "Description"; Text[100])
+        {
+            Caption = 'Description';
+            DataClassification = CustomerContent;
+        }
+        field(50101; "Is Default"; Boolean)
+        {
+            Caption = 'Is Default Setup';
+            DataClassification = CustomerContent;
+
+            trigger OnValidate()
+            begin
+                if "Is Default" then
+                    SetOtherSetupsNonDefault();
+            end;
+        }
+
     }
+
+
 
     keys
     {
@@ -60,4 +79,18 @@ table 50100 "Vendor Rating Setup"
             Clustered = true;
         }
     }
+
+    local procedure SetOtherSetupsNonDefault()
+    var
+        VendorRatingSetup: Record "Vendor Rating Setup";
+    begin
+        VendorRatingSetup.SetFilter("Setup Code", '<>%1', "Setup Code");
+        if VendorRatingSetup.FindSet() then
+            repeat
+                if VendorRatingSetup."Is Default" then begin
+                    VendorRatingSetup."Is Default" := false;
+                    VendorRatingSetup.Modify();
+                end;
+            until VendorRatingSetup.Next() = 0;
+    end;
 }

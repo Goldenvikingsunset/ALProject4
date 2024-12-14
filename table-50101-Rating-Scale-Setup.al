@@ -5,6 +5,12 @@ table 50101 "Rating Scale Setup"
     fields
     {
         field(1; "Entry No"; Integer) { AutoIncrement = true; }
+        field(50100; "Setup Code"; Code[20])
+        {
+            Caption = 'Setup Code';
+            TableRelation = "Vendor Rating Setup";
+            DataClassification = CustomerContent;
+        }
         field(2; "Rating Type"; Enum "Rating Type") { }
         field(3; "Score From"; Decimal)
         {
@@ -22,5 +28,5 @@ table 50101 "Rating Scale Setup"
         field(6; "Points"; Integer) { MinValue = 0; }
     }
 
-    keys { key(PK; "Entry No") { Clustered = true; } }
+    keys { key(SetupCode; "Setup Code", "Rating Type", "Score From") { Clustered = true; } }
 }

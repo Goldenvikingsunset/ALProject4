@@ -9,6 +9,20 @@ table 50104 "Vendor Rating Entry"
             AutoIncrement = true;
             DataClassification = SystemMetadata;
         }
+        field(50100; "Setup Code"; Code[20])
+        {
+            Caption = 'Setup Code';
+            TableRelation = "Vendor Rating Setup";
+
+            // Get the setup code from the vendor when creating the entry
+            trigger OnValidate()
+            var
+                Vendor: Record Vendor;
+            begin
+                if Vendor.Get("Vendor No") then
+                    "Setup Code" := Vendor."Rating Setup Code";
+            end;
+        }
         // Rest of fields remain same
         field(2; "Vendor No"; Code[20]) { TableRelation = Vendor; }
         field(3; "Posting Date"; Date) { }

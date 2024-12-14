@@ -11,6 +11,10 @@ page 50101 "Rating Scale Setup List"
         {
             repeater(Group)
             {
+                field("Setup Code"; Rec."Setup Code")
+                {
+                    ApplicationArea = All;
+                }
                 field("Rating Type"; Rec."Rating Type") { }
                 field("Score From"; Rec."Score From") { }
                 field("Score To"; Rec."Score To") { }

@@ -12,6 +12,10 @@ page 50105 "Vendor Rating Entry List"
             repeater(Group)
             {
                 field("Vendor No"; Rec."Vendor No") { }
+                field("Setup Code"; Rec."Setup Code")
+                {
+                    ApplicationArea = All;
+                }
                 field("Posting Date"; Rec."Posting Date") { }
                 field("Document No"; Rec."Document No") { }
                 field("Schedule Score"; Rec."Schedule Score") { }
@@ -22,5 +26,7 @@ page 50105 "Vendor Rating Entry List"
                 field(Points; Rec.Points) { }
             }
         }
+
     }
+
 }

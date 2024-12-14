@@ -11,6 +11,10 @@ page 50102 "Delivery Variance Setup List"
         {
             repeater(Group)
             {
+                field("Setup Code"; Rec."Setup Code")
+                {
+                    ApplicationArea = All;
+                }
                 field("Days Late From"; Rec."Days Late From") { }
                 field("Days Late To"; Rec."Days Late To") { }
                 field("Score"; Rec."Score") { }

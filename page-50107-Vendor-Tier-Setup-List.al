@@ -11,7 +11,12 @@ page 50107 "Vendor Tier Setup List"
         area(Content)
         {
             repeater(Group)
+
             {
+                field("Setup Code"; Rec."Setup Code")
+                {
+                    ApplicationArea = All;
+                }
                 field("Tier Code"; Rec."Tier Code")
                 {
                     ApplicationArea = All;

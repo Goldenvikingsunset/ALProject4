@@ -4,6 +4,12 @@ table 50107 "Vendor Tier Setup"
 
     fields
     {
+        field(50100; "Setup Code"; Code[20])
+        {
+            Caption = 'Setup Code';
+            TableRelation = "Vendor Rating Setup";
+            DataClassification = CustomerContent;
+        }
         field(1; "Tier Code"; Code[20])
         {
             Caption = 'Tier Code';
@@ -26,10 +32,10 @@ table 50107 "Vendor Tier Setup"
 
     keys
     {
-        key(PK; "Tier Code")
+        key(PK; "Setup Code", "Tier Code")
         {
             Clustered = true;
         }
-        key(Points; "Minimum Points") { }
+        key(SetupTier; "Setup Code", "Minimum Points") { }
     }
 }

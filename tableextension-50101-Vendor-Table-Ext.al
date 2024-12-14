@@ -46,5 +46,47 @@ tableextension 50106 "Vendor Table Ext" extends Vendor
             Caption = 'Points to Next Tier';
             Editable = false;
         }
+        field(50158; "Rating Type"; Enum "Rating Type")
+        {
+            Caption = 'Rating Type';
+            FieldClass = FlowField;
+            CalcFormula = lookup("Vendor Rating Setup"."Rating Type" where("Setup Code" = field("Rating Setup Code")));
+            TableRelation = "Vendor Rating Setup";
+            Editable = true;
+        }
+        field(50159; "Rating Setup Code"; Code[20])
+        {
+            Caption = 'Rating Setup Code';
+            DataClassification = CustomerContent;
+            TableRelation = "Vendor Rating Setup"."Setup Code";  // Make sure this is properly set
+
+            trigger OnValidate()
+            begin
+                if "Rating Setup Code" = '' then begin
+                    SetDefaultRatingSetup();
+                end;
+            end;
+        }
     }
+
+    local procedure SetDefaultRatingSetup()
+    var
+        VendorRatingSetup: Record "Vendor Rating Setup";
+    begin
+        VendorRatingSetup.SetRange("Is Default", true);
+        if VendorRatingSetup.FindFirst() then
+            Validate("Rating Setup Code", VendorRatingSetup."Setup Code")
+        else begin
+            VendorRatingSetup.SetRange("Setup Code", 'DEFAULT');
+            if VendorRatingSetup.FindFirst() then
+                Validate("Rating Setup Code", 'DEFAULT');
+        end;
+    end;
+
+    local procedure RecalculateVendorRating()
+    var
+        RatingCalc: Codeunit "Rating Calculation";
+    begin
+        RatingCalc.RecalculateVendorRating("No.");
+    end;
 }

@@ -15,6 +15,11 @@ page 50106 "Vendor Rating FactBox"
                 {
                     group(Values)
                     {
+                        field("Rating Setup Code"; Rec."Rating Setup Code")
+                        {
+                            ApplicationArea = All;
+                            ToolTip = 'Specifies which rating setup to use for this vendor';
+                        }
                         field("Current Rating"; Rec."Current Rating")
                         {
                             ApplicationArea = All;
@@ -51,6 +56,7 @@ page 50106 "Vendor Rating FactBox"
                             ApplicationArea = All;
                             StyleExpr = 'Ambiguous';
                         }
+
                     }
                 }
             }
