@@ -1,37 +1,5 @@
 codeunit 50108 "Rating Data Management"
 {
-    procedure CreateRatingEntry(PurchRcptHeader: Record "Purch. Rcpt. Header")
-    var
-        VendorRatingEntry: Record "Vendor Rating Entry";
-        RatingScoreCalculator: Codeunit "Rating Score Calculation";
-        PurchOrderHeader: Record "Purchase Header";
-        PurchRcptLine: Record "Purch. Rcpt. Line";
-        PurchOrderLine: Record "Purchase Line";
-        Vendor: Record Vendor;
-    begin
-        PurchRcptLine.SetRange("Document No.", PurchRcptHeader."No.");
-        if not PurchRcptLine.FindFirst() then
-            exit;
-
-        VendorRatingEntry.Init();
-        VendorRatingEntry."Vendor No" := PurchRcptHeader."Buy-from Vendor No.";
-
-        // Set Setup Code - same pattern as CreateHistoryEntry
-        if Vendor.Get(PurchRcptHeader."Buy-from Vendor No.") then
-            VendorRatingEntry."Setup Code" := Vendor."Rating Setup Code";
-
-        if VendorRatingEntry."Setup Code" = '' then
-            VendorRatingEntry."Setup Code" := 'DEFAULT';
-
-        VendorRatingEntry."Document No" := PurchRcptLine."Order No.";
-        VendorRatingEntry."Document Type" := PurchOrderHeader."Document Type"::Order;
-        VendorRatingEntry."Posting Date" := PurchRcptHeader."Posting Date";
-        VendorRatingEntry."Expected Date" := PurchOrderHeader."Expected Receipt Date";
-        VendorRatingEntry."Actual Date" := PurchRcptHeader."Posting Date";
-        VendorRatingEntry."Ordered Quantity" := PurchOrderLine.Quantity;
-        VendorRatingEntry."Received Quantity" := PurchRcptLine.Quantity;
-        VendorRatingEntry.Insert(true);
-    end;
 
     procedure CreateHistoryEntry(VendorNo: Code[20]; StartDate: Date; EndDate: Date;
     EntryCount: Integer; AvgScheduleScore: Decimal; AvgQualityScore: Decimal;

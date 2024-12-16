@@ -311,26 +311,44 @@ codeunit 50101 "Rating Management"
         PurchOrder: Record "Purchase Header";
         PurchRcptLine: Record "Purch. Rcpt. Line";
         PurchOrderLine: Record "Purchase Line";
+        Vendor: Record Vendor;
+        RatingCalc: Codeunit "Rating Calculation";
     begin
         PurchRcptLine.SetRange("Document No.", PurchRcptHeader."No.");
-        if PurchRcptLine.FindFirst() then begin
-            VendorRatingEntry.Init();
-            VendorRatingEntry."Vendor No" := PurchRcptHeader."Buy-from Vendor No.";
-            VendorRatingEntry."Document No" := PurchRcptHeader."No.";
-            VendorRatingEntry."Posting Date" := PurchRcptHeader."Posting Date";
+        if not PurchRcptLine.FindFirst() then
+            exit;
 
-            if PurchOrder.Get(PurchOrder."Document Type"::Order, PurchRcptLine."Order No.") then
-                VendorRatingEntry."Expected Date" := PurchOrder."Expected Receipt Date";
+        VendorRatingEntry.Init();
+        VendorRatingEntry."Vendor No" := PurchRcptHeader."Buy-from Vendor No.";
 
-            if PurchOrderLine.Get(PurchOrderLine."Document Type"::Order,
-                                PurchRcptLine."Order No.",
-                                PurchRcptLine."Order Line No.") then
-                VendorRatingEntry."Ordered Quantity" := PurchOrderLine.Quantity;
+        // Set Setup Code
+        if Vendor.Get(PurchRcptHeader."Buy-from Vendor No.") then
+            VendorRatingEntry."Setup Code" := Vendor."Rating Setup Code"
+        else
+            VendorRatingEntry."Setup Code" := 'DEFAULT';
 
-            VendorRatingEntry."Received Quantity" := PurchRcptLine.Quantity;
-            VendorRatingEntry."Actual Date" := PurchRcptHeader."Posting Date";
-            VendorRatingEntry.Insert(true);
-        end;
+        // Set Order No as Document No and Receipt No
+        VendorRatingEntry."Document No" := PurchRcptLine."Order No.";
+        VendorRatingEntry."Receipt No" := PurchRcptHeader."No.";
+        VendorRatingEntry."Document Type" := PurchOrder."Document Type"::Order;
+        VendorRatingEntry."Posting Date" := PurchRcptHeader."Posting Date";
+
+        // Get Expected Date from Purchase Order
+        if PurchOrder.Get(PurchOrder."Document Type"::Order, PurchRcptLine."Order No.") then
+            VendorRatingEntry."Expected Date" := PurchOrder."Expected Receipt Date";
+
+        // Get Ordered Quantity from Purchase Order Line
+        if PurchOrderLine.Get(PurchOrderLine."Document Type"::Order,
+                             PurchRcptLine."Order No.",
+                             PurchRcptLine."Order Line No.") then
+            VendorRatingEntry."Ordered Quantity" := PurchOrderLine.Quantity;
+
+        VendorRatingEntry."Received Quantity" := PurchRcptLine.Quantity;
+        VendorRatingEntry."Actual Date" := PurchRcptHeader."Posting Date";
+
+        if VendorRatingEntry.Insert(true) then
+            // Calculate scores for the newly created entry
+            RatingCalc.CalculateEntryScores(VendorRatingEntry);
     end;
 
     procedure EnsureSetupExists()

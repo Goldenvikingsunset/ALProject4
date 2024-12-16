@@ -91,7 +91,6 @@ codeunit 50107 "Rating Score Calculation"
         Vendor: Record Vendor;
         VariancePercentage: Decimal;
     begin
-        // Get receipt line
         PurchRcptLine.SetRange("Document No.", DocumentNo);
         if not PurchRcptLine.FindFirst() then
             exit(0);

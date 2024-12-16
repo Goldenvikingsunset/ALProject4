@@ -149,8 +149,8 @@ codeunit 50100 "Rating Calculation"
         if not VendorRatingSetup.Get(VendorRatingEntry."Setup Code") then
             VendorRatingSetup.Get('DEFAULT');
 
-        // Calculate Schedule Score
-        ScheduleScore := RatingScoreCalculator.CalculateScheduleScore(VendorRatingEntry."Document No");
+        // Calculate Schedule Score - using Receipt No instead of Document No
+        ScheduleScore := RatingScoreCalculator.CalculateScheduleScore(VendorRatingEntry."Receipt No");
         VendorRatingEntry."Schedule Score" := ScheduleScore;
 
         // Calculate Quality Score
@@ -160,8 +160,8 @@ codeunit 50100 "Rating Calculation"
         );
         VendorRatingEntry."Quality Score" := QualityScore;
 
-        // Calculate Quantity Score
-        QuantityScore := RatingScoreCalculator.CalculateQuantityScore(VendorRatingEntry."Document No");
+        // Calculate Quantity Score - using Receipt No instead of Document No
+        QuantityScore := RatingScoreCalculator.CalculateQuantityScore(VendorRatingEntry."Receipt No");
         VendorRatingEntry."Quantity Score" := QuantityScore;
 
         // Calculate weighted total score
