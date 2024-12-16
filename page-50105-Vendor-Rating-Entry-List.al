@@ -62,5 +62,9 @@ page 50105 "Vendor Rating Entry List"
         }
 
     }
-
+    trigger OnOpenPage()
+    begin
+        Rec.SetCurrentKey("Posting Date");
+        Rec.Ascending(false);
+    end;
 }

@@ -77,6 +77,7 @@ table 50104 "Vendor Rating Entry"
     {
         key(PK; "Entry No") { Clustered = true; }
         key(VendorPosting; "Vendor No", "Posting Date") { }
+        key(PostingDate; "Posting Date") { }  // Added for sorting
         key(Document; "Document No") { }
         key(Receipt; "Receipt No") { }
     }
