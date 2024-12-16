@@ -72,4 +72,30 @@ page 50110 "Vendor Rating Setup List"
             }
         }
     }
+    actions
+    {
+        area(Processing)
+        {
+            action(Initialize)
+            {
+                ApplicationArea = All;
+                Caption = 'Initialize Setup';
+                Image = Setup;
+                Promoted = true;
+                PromotedCategory = Process;
+
+                trigger OnAction()
+                var
+                    RatingMgmt: Codeunit "Rating Management";
+                    TierMgt: Codeunit "Vendor Tier Management";
+                begin
+                    RatingMgmt.InitializeSetup();
+                    RatingMgmt.InitializeDefaultScales();
+                    RatingMgmt.InitializeDeliveryVariances();
+                    RatingMgmt.InitializeQuantityVariances();
+                    TierMgt.InitializeDefaultTiers();
+                end;
+            }
+        }
+    }
 }

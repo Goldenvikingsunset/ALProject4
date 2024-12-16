@@ -94,27 +94,6 @@ page 50100 "Vendor Rating Setup Card"
 
     actions
     {
-        area(Processing)
-        {
-            action(Initialize)
-            {
-                ApplicationArea = All;
-                Caption = 'Initialize Setup';
-                Image = Setup;
-                Promoted = true;
-                PromotedCategory = Process;
-
-                trigger OnAction()
-                var
-                    RatingMgmt: Codeunit "Rating Management";
-                begin
-                    RatingMgmt.InitializeSetup();
-                    RatingMgmt.InitializeDefaultScales();
-                    RatingMgmt.InitializeDeliveryVariances();
-                    RatingMgmt.InitializeQuantityVariances();
-                end;
-            }
-        }
 
         area(Navigation)
         {

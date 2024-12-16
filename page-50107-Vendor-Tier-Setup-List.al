@@ -36,27 +36,4 @@ page 50107 "Vendor Tier Setup List"
             }
         }
     }
-
-    actions
-    {
-        area(Processing)
-        {
-            action(InitializeDefaultTiers)
-            {
-                ApplicationArea = All;
-                Caption = 'Initialize Default Tiers';
-                Image = Setup;
-                Promoted = true;
-                PromotedCategory = Process;
-
-                trigger OnAction()
-                var
-                    TierMgt: Codeunit "Vendor Tier Management";
-                begin
-                    TierMgt.InitializeDefaultTiers();
-                    CurrPage.Update(false);
-                end;
-            }
-        }
-    }
 }
