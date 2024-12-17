@@ -1,4 +1,4 @@
-page 50110 "Vendor Rating Setup List"
+page 50108 "Vendor Rating Setup List"
 {
     PageType = List;
     ApplicationArea = All;

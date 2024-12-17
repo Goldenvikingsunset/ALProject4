@@ -1,4 +1,4 @@
-codeunit 50104 "Rating Entry Subscriber"
+codeunit 50102 "Rating Entry Subscriber"
 {
     [EventSubscriber(ObjectType::Codeunit, Codeunit::"Purch.-Post", 'OnAfterPostPurchaseDoc', '', false, false)]
     local procedure OnAfterPostPurchaseDoc(var PurchaseHeader: Record "Purchase Header"; var GenJnlPostLine: Codeunit "Gen. Jnl.-Post Line";

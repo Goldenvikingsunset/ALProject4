@@ -1,4 +1,4 @@
-codeunit 50108 "Rating Data Management"
+codeunit 50105 "Rating Data Management"
 {
 
     procedure CreateHistoryEntry(VendorNo: Code[20]; StartDate: Date; EndDate: Date;
@@ -7,17 +7,36 @@ codeunit 50108 "Rating Data Management"
     var
         VendorRatingHistory: Record "Vendor Rating History";
         VendorRatingEntry: Record "Vendor Rating Entry";
+        PreviousDocNo: Code[20];
         TotalPoints: Integer;
         AveragePoints: Integer;
         DeliveryCount: Integer;
+        UniqueOrderCount: Integer;
         Vendor: Record Vendor;
     begin
-        // Count entries - these are actual deliveries
+        VendorRatingEntry.SetRange("Vendor No", VendorNo);
+        VendorRatingEntry.SetRange("Posting Date", StartDate, EndDate);
+
+        // Count unique orders by tracking document number changes
+        VendorRatingEntry.SetCurrentKey("Vendor No", "Document No");
+        if VendorRatingEntry.FindSet() then begin
+            UniqueOrderCount := 1;  // Initialize with first order
+            PreviousDocNo := VendorRatingEntry."Document No";
+
+            while VendorRatingEntry.Next() <> 0 do begin
+                if PreviousDocNo <> VendorRatingEntry."Document No" then begin
+                    UniqueOrderCount += 1;
+                    PreviousDocNo := VendorRatingEntry."Document No";
+                end;
+            end;
+        end;
+
+        // Reset for delivery count
+        VendorRatingEntry.Reset();
         VendorRatingEntry.SetRange("Vendor No", VendorNo);
         VendorRatingEntry.SetRange("Posting Date", StartDate, EndDate);
         DeliveryCount := VendorRatingEntry.Count;
 
-        // Use EntryCount for unique orders - this comes from order count
         VendorRatingHistory.Init();
         VendorRatingHistory."Vendor No" := VendorNo;
         if Vendor.Get(VendorNo) then
@@ -27,7 +46,7 @@ codeunit 50108 "Rating Data Management"
 
         VendorRatingHistory."Period Start Date" := StartDate;
         VendorRatingHistory."Period End Date" := EndDate;
-        VendorRatingHistory."Number of Orders" := EntryCount;
+        VendorRatingHistory."Number of Orders" := UniqueOrderCount;
         VendorRatingHistory."Number of Deliveries" := DeliveryCount;
         VendorRatingHistory."Average Schedule Score" := AvgScheduleScore;
         VendorRatingHistory."Average Quality Score" := AvgQualityScore;
@@ -35,7 +54,6 @@ codeunit 50108 "Rating Data Management"
         VendorRatingHistory."Total Score" := TotalScore;
         VendorRatingHistory.Rating := Rating;
 
-        // Calculate points
         if VendorRatingEntry.FindSet() then
             repeat
                 TotalPoints += VendorRatingEntry.Points;

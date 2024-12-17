@@ -1,4 +1,4 @@
-codeunit 50107 "Rating Score Calculation"
+codeunit 50104 "Rating Score Calculation"
 {
     procedure CalculateScheduleScore(DocumentNo: Code[20]): Decimal
     var
@@ -40,40 +40,36 @@ codeunit 50107 "Rating Score Calculation"
 
     procedure CalculateQualityScore(VendorNo: Code[20]; DateFilter: Text): Decimal
     var
-        ReturnShipmentLine: Record "Return Shipment Line";
-        PurchRcptLine: Record "Purch. Rcpt. Line";
+        DeliveryPerformance: Query "Delivery Performance";
         QualityVarianceSetup: Record "Quantity Variance Setup";
         TotalReceived: Decimal;
         TotalReturned: Decimal;
         ReturnPercentage: Decimal;
+        Vendor: Record Vendor;
     begin
+        // Get vendor's setup code
+        if Vendor.Get(VendorNo) then
+            QualityVarianceSetup.SetRange("Setup Code", Vendor."Rating Setup Code")
+        else
+            QualityVarianceSetup.SetRange("Setup Code", 'DEFAULT');
 
+        DeliveryPerformance.SetFilter(PostingDate, DateFilter);
+        DeliveryPerformance.SetRange(BuyFromVendorNo, VendorNo);
+        DeliveryPerformance.Open();
 
-        // Get total received for this vendor in the period
-        PurchRcptLine.Reset();
-        PurchRcptLine.SetRange("Buy-from Vendor No.", VendorNo);
-        PurchRcptLine.SetFilter("Posting Date", DateFilter);
-        PurchRcptLine.CalcSums(Quantity);
-        TotalReceived := PurchRcptLine.Quantity;
+        while DeliveryPerformance.Read() do begin
+            TotalReceived += DeliveryPerformance.ReceivedQuantity;
+            TotalReturned += DeliveryPerformance.ReturnedQty;  // Using the correct field name
+        end;
 
         if TotalReceived = 0 then
             exit(0);
 
-        // Get total returns for this vendor in the period
-        ReturnShipmentLine.Reset();
-        ReturnShipmentLine.SetRange("Buy-from Vendor No.", VendorNo);
-        ReturnShipmentLine.SetFilter("Posting Date", DateFilter);
-        ReturnShipmentLine.CalcSums(Quantity);
-        TotalReturned := ReturnShipmentLine.Quantity;
-
         if TotalReturned = 0 then
             exit(100);  // No returns = perfect score
 
-        // Calculate return percentage
         ReturnPercentage := (TotalReturned / TotalReceived) * 100;
 
-        // Find applicable score from setup
-        QualityVarianceSetup.Reset();
         QualityVarianceSetup.SetFilter("Variance Percentage From", '<=%1', ReturnPercentage);
         QualityVarianceSetup.SetFilter("Variance Percentage To", '>=%1', ReturnPercentage);
 

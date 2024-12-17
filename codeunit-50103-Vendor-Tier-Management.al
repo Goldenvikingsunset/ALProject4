@@ -1,4 +1,4 @@
-codeunit 50106 "Vendor Tier Management"
+codeunit 50103 "Vendor Tier Management"
 {
     procedure UpdateVendorTier(VendorNo: Code[20])
     var
