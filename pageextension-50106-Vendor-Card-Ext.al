@@ -93,10 +93,28 @@ pageextension 50106 "Vendor Card Ext" extends "Vendor Card"
                 trigger OnAction()
                 var
                     RatingCalc: Codeunit "Rating Calculation";
+                    VendorRatingSetup: Record "Vendor Rating Setup";
+                    StartDate: Date;
+                    EndDate: Date;
                 begin
+                    // Get vendor's rating setup
+                    if not VendorRatingSetup.Get(Rec."Rating Setup Code") then
+                        VendorRatingSetup.Get('DEFAULT');
+
+                    EndDate := Today;
+
+                    case VendorRatingSetup."Evaluation Period" of
+                        "Evaluation Period"::Daily:
+                            StartDate := CalcDate('<-1D>', EndDate);
+                        "Evaluation Period"::Weekly:
+                            StartDate := CalcDate('<-1W>', EndDate);
+                        "Evaluation Period"::Monthly:
+                            StartDate := CalcDate('<-1M>', EndDate);
+                    end;
+
                     RatingCalc.CalculateVendorRating(
                         Rec."No.",
-                        Format(CalcDate('<-30D>', Today)) + '..' + Format(Today)
+                        Format(StartDate) + '..' + Format(EndDate)
                     );
                 end;
             }

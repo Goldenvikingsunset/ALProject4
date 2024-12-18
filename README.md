@@ -1,181 +1,217 @@
 # Business Central Vendor Rating System
 
-A comprehensive vendor performance management solution for Microsoft Dynamics 365 Business Central that enables automated vendor performance evaluation with multiple rating configurations, tier-based classification, and detailed performance tracking.
+## Overview
+A comprehensive vendor performance management solution for Microsoft Dynamics 365 Business Central that automates vendor evaluation through configurable rating systems, tier-based classifications, and detailed analytics. The system seamlessly integrates with existing procurement workflows to provide real-time insights into vendor performance.
 
-## Key Features
+## Core Features
 
-### Multiple Rating Configurations
-- Support for different vendor types (Default, Manufacturing, Services, Supplies)
-- Customizable evaluation criteria per setup
-- Configurable weights for performance metrics
-- Flexible minimum order requirements
-- Industry-specific scoring scales
+### Multi-Configuration Rating Framework
+- **Industry-Specific Setups**: Pre-configured templates for Manufacturing, Services, and Supplies
+- **Customizable Evaluation Criteria**: Flexible weighting system for different performance metrics
+- **Dynamic Scoring Models**: Configurable scoring scales and thresholds per setup type
+- **Automated Setup Management**: Initialize and maintain rating configurations through user-friendly interfaces
 
-### Performance Metrics
-- **Schedule Performance**: Measures delivery timeliness and adherence to expected dates
-- **Quality Performance**: Tracks returns and quality issues through return order analysis
-- **Quantity Performance**: Evaluates order accuracy and quantity variances
-- **Weighted Scoring**: Customizable importance of each metric per vendor type
+### Performance Metrics & Scoring
+- **Schedule Performance**: 
+  - Automated delivery timeline tracking
+  - Configurable variance thresholds
+  - Early/late delivery scoring matrices
+  
+- **Quality Assessment**:
+  - Quality score capture during receipt posting
+  - Return order analysis and tracking
+  - Integrated quality metrics calculation
+  
+- **Quantity Accuracy**:
+  - Order vs. receipt variance tracking
+  - Configurable tolerance levels
+  - Automated scoring based on accuracy
 
-### Document Management & Tracking
-- Full integration with BC purchase documents
-- Direct navigation between related documents
-- Order and receipt number tracking
-- Complete purchase history accessibility
+### Advanced Tier Management
+- **Dynamic Tier System**:
+  - Automated progression through Bronze, Silver, Gold, and Platinum tiers
+  - Points-based advancement with configurable thresholds
+  - Industry-specific tier requirements
+  
+- **Performance Tracking**:
+  - Real-time point accumulation
+  - Progress tracking toward next tier
+  - Historical performance analysis
 
-### Automated Evaluation System
-```mermaid
-flowchart TD
-    A[Purchase Receipt Posted] -->|Trigger| B{Check Setup}
-    B -->|Found| C[Create Rating Entry]
-    B -->|Not Found| D[Use Default Setup]
-    D --> C
-    C --> E[Calculate Metrics]
-    E --> F[Schedule Score]
-    E --> G[Quality Score]
-    E --> H[Quantity Score]
-    F & G & H --> I[Apply Weights]
-    I --> J[Update Rating]
-    J --> K[Process Points]
-    K --> L[Update Tier]
+### Business Central Integration
+- **Document Processing**:
+  - Automated rating entry creation on purchase receipt posting
+  - Quality score capture during receipt processing
+  - Return order integration for quality metrics
+  
+- **UI Enhancements**:
+  - Enhanced Vendor Card with rating information
+  - Interactive Rating FactBox
+  - Performance analytics dashboard
+  - Drill-down capabilities for detailed analysis
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style J fill:#f9f,stroke:#333,stroke-width:2px
-```
+## Technical Architecture
 
-### Tier Management System
-- Dynamic tier progression (Bronze to Platinum)
-- Points-based advancement
-- Customizable tier thresholds per setup
-- Priority level management
-- Automated notifications for tier changes
-
-### Performance Analytics
+### Core Components
 ```mermaid
 graph TB
-    subgraph "Setup & Configuration"
-        A[Rating Setup Types]
-        B[Score Scales]
-        C[Variance Settings]
-        D[Tier Definitions]
+    subgraph "Setup Layer"
+        A[Rating Setup] --> B[Rating Scales]
+        A --> C[Variance Settings]
+        A --> D[Tier Configuration]
     end
     
-    subgraph "Transaction Handling"
-        E[Purchase Documents]
-        F[Receipt Processing]
-        G[Returns Management]
-        H[Quality Assessment]
+    subgraph "Transaction Layer"
+        E[Purchase Documents] --> F[Rating Entries]
+        G[Receipt Processing] --> F
+        H[Return Orders] --> F
     end
     
-    subgraph "Evaluation Engine"
-        I[Entry Creation]
-        J[Score Processing]
-        K[Points System]
-        L[History Tracking]
+    subgraph "Processing Layer"
+        F --> I[Score Calculation]
+        I --> J[Points Processing]
+        J --> K[Tier Management]
+        K --> L[History Tracking]
     end
     
-    A --> I
-    B --> J
-    C --> J
-    D --> K
-    E --> F
-    F --> I
-    G --> H
-    H --> J
-    I --> J
-    J --> K
-    K --> L
-
-    style J fill:#f9f,stroke:#333,stroke-width:2px
-    style K fill:#f9f,stroke:#333,stroke-width:2px
+    subgraph "Analysis Layer"
+        L --> M[Vendor Analytics]
+        L --> N[Trend Analysis]
+        L --> O[Performance Reports]
+    end
 ```
 
-## Implementation Guide
+### Key Codeunits
+- **Rating Management**: Core setup and configuration handling
+- **Rating Calculation**: Performance metric computation
+- **Rating Data Management**: Data processing and history tracking
+- **Vendor Tier Management**: Tier progression and points system
+- **Quality Score Handler**: Quality metric capture and processing
+
+## Setup Guide
 
 ### Prerequisites
 - Microsoft Dynamics 365 Business Central 2022 Wave 2 or later
-- Purchase order management setup
-- Vendor master data setup
+- Standard procurement module configuration
+- Appropriate user permissions
 
-### Initial Setup
-1. Deploy the extension
-2. Navigate to Vendor Rating Setup
-3. Run Initialize Setup action for default configurations
-4. Configure additional rating setups as needed:
-   - Manufacturing
-   - Services
-   - Supplies
-5. Review and adjust:
-   - Rating scales per setup
-   - Delivery variance tolerances
-   - Quantity variance allowances
-   - Tier requirements and thresholds
+### Initial Configuration
+1. **Base Setup**
+   ```
+   Rating Management -> Initialize Setup
+   ```
+   - Creates default configuration
+   - Establishes rating scales
+   - Sets up variance tolerances
+   - Initializes tier structure
 
-### Vendor Configuration
-1. Access Vendor Card
-2. Assign appropriate Rating Setup Code
-3. Review initial tier assignment
-4. Configure vendor-specific parameters
+2. **Industry Configuration**
+   - Navigate to Vendor Rating Setup
+   - Select or create industry-specific setup
+   - Configure weights and thresholds
+   - Define tier requirements
 
-## System Integration
+3. **Vendor Assignment**
+   - Open Vendor Card
+   - Assign appropriate Rating Setup Code
+   - Review initial tier placement
+   - Configure vendor-specific parameters
 
-### Standard BC Integration Points
-- Purchase Order Management
-- Receipt Processing
-- Return Order Handling
-- Vendor Management
-
-### Enhanced User Interface
-- Extended Vendor Card with rating information
-- Dynamic Rating FactBox
-- Comprehensive Rating History
-- Interactive Setup Cards
-- Performance Analytics Dashboards
-
-## Usage Guidelines
+## User Guide
 
 ### Daily Operations
-- Automatic rating calculation on receipt posting
-- Direct document navigation from rating entries
-- Real-time performance monitoring
-- Instant tier status updates
+1. **Purchase Receipt Processing**
+   - System automatically creates rating entry
+   - Quality score prompt appears
+   - Scores calculate automatically
+   - Tier updates process in real-time
 
-### Performance Monitoring
-- Track vendor scores across all metrics
-- Monitor trend indicators
-- Review point accumulation
-- Analyze tier progression
+2. **Performance Monitoring**
+   - Use Vendor Rating FactBox for quick insights
+   - Review detailed history through drill-down
+   - Track progress toward next tier
+   - Monitor trend indicators
 
-### Document Navigation
-- Direct access to related purchase orders
-- Quick view of posted receipts
-- Integrated return order tracking
-- Complete transaction history
+3. **Analysis and Reporting**
+   - Access vendor performance dashboard
+   - Review historical trends
+   - Export data for detailed analysis
+   - Generate performance reports
 
-## Technical Requirements
-- Business Central 2022 Wave 2 or later
-- Standard user permissions for setup
-- Appropriate security roles for rating management
+## Development Guide
+
+### Extension Structure
+```
+├── src/
+│   ├── Pages/
+│   │   ├── VendorRatingSetup
+│   │   ├── RatingFactBox
+│   │   └── PerformanceAnalytics
+│   ├── Tables/
+│   │   ├── RatingSetup
+│   │   ├── RatingEntry
+│   │   └── RatingHistory
+│   ├── Codeunits/
+│   │   ├── RatingManagement
+│   │   ├── RatingCalculation
+│   │   └── TierManagement
+│   └── Enums/
+│       ├── RatingType
+│       └── TrendIndicator
+```
+
+### Best Practices
+- Implement event subscribers for document posting
+- Use table relations for data integrity
+- Leverage BC's built-in permission system
+- Follow AL coding standards
+- Implement proper error handling
+
+## Troubleshooting
+
+### Common Issues
+1. **Rating Not Calculating**
+   - Verify setup initialization
+   - Check minimum order requirements
+   - Validate setup code assignment
+
+2. **Tier Not Updating**
+   - Review points calculation
+   - Check tier thresholds
+   - Verify rating entry creation
+
+3. **Performance Issues**
+   - Monitor database indexes
+   - Review calculation triggers
+   - Check data archival settings
 
 ## Support and Maintenance
-For technical support and feature requests:
-- Submit detailed issue reports
-- Include setup configurations
-- Provide specific scenario examples
-- Document version information
+
+### Version Control
+- GitHub repository for source code
+- Semantic versioning for releases
+- Detailed changelog maintenance
+
+### Support Channels
+- Issue tracking through GitHub
+- Technical documentation wiki
+- Community forum participation
 
 ## License
-This project is licensed under the MIT License - see LICENSE file for details.
+Licensed under the MIT License - see LICENSE file for details.
 
-## Contributing
-We welcome contributions! Please:
+## Contributing Guidelines
 1. Fork the repository
-2. Create a feature branch
-3. Submit a pull request with detailed changes
-4. Include relevant test cases
-5. Update documentation as needed
+2. Create feature branch
+3. Follow coding standards
+4. Include unit tests
+5. Submit pull request
 
-## Version History
-- Current: Multiple rating setup support, enhanced document navigation
-- Previous: Single rating configuration, basic scoring system
+## Roadmap
+- Advanced analytics dashboard
+- AI-powered scoring predictions
+- Vendor benchmarking
+- Mobile app integration
+- API expansion for external systems
+
+For technical support, feature requests, or bug reports, please submit detailed information through our GitHub issue tracker.

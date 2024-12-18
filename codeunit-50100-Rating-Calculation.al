@@ -132,6 +132,7 @@ codeunit 50100 "Rating Calculation"
     var
         VendorRatingSetup: Record "Vendor Rating Setup";
         RatingScoreCalculator: Codeunit "Rating Score Calculation";
+        PurchRcptHeader: Record "Purch. Rcpt. Header";
         ScheduleScore: Decimal;
         QualityScore: Decimal;
         QuantityScore: Decimal;
@@ -153,12 +154,11 @@ codeunit 50100 "Rating Calculation"
         ScheduleScore := RatingScoreCalculator.CalculateScheduleScore(VendorRatingEntry."Receipt No");
         VendorRatingEntry."Schedule Score" := ScheduleScore;
 
-        // Calculate Quality Score
-        QualityScore := RatingScoreCalculator.CalculateQualityScore(
-            VendorRatingEntry."Vendor No",
-            Format(VendorRatingEntry."Posting Date", 0, '<Year4>-<Month,2>-<Day,2>')
-        );
-        VendorRatingEntry."Quality Score" := QualityScore;
+        // Get Quality Score directly from receipt header instead of calculating
+        if PurchRcptHeader.Get(VendorRatingEntry."Receipt No") then
+            VendorRatingEntry."Quality Score" := PurchRcptHeader."Quality Score"
+        else
+            VendorRatingEntry."Quality Score" := 0;
 
         // Calculate Quantity Score - using Receipt No instead of Document No
         QuantityScore := RatingScoreCalculator.CalculateQuantityScore(VendorRatingEntry."Receipt No");
@@ -166,11 +166,8 @@ codeunit 50100 "Rating Calculation"
 
         // Calculate weighted total score
         TotalScore := (ScheduleScore * VendorRatingSetup."Schedule Weight") +
-                     (QualityScore * VendorRatingSetup."Quality Weight") +
+                     (VendorRatingEntry."Quality Score" * VendorRatingSetup."Quality Weight") +
                      (QuantityScore * VendorRatingSetup."Quantity Weight");
-
-        Message('Scores - Schedule: %1, Quality: %2, Quantity: %3, Total: %4',
-            ScheduleScore, QualityScore, QuantityScore, TotalScore);
 
         VendorRatingEntry."Total Score" := Round(TotalScore, 0.01);
         VendorRatingEntry.Rating := RatingScoreCalculator.DetermineRating(TotalScore, VendorRatingEntry."Setup Code");

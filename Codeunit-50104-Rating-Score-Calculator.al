@@ -38,47 +38,6 @@ codeunit 50104 "Rating Score Calculation"
             exit(0);
     end;
 
-    procedure CalculateQualityScore(VendorNo: Code[20]; DateFilter: Text): Decimal
-    var
-        DeliveryPerformance: Query "Delivery Performance";
-        QualityVarianceSetup: Record "Quantity Variance Setup";
-        TotalReceived: Decimal;
-        TotalReturned: Decimal;
-        ReturnPercentage: Decimal;
-        Vendor: Record Vendor;
-    begin
-        // Get vendor's setup code
-        if Vendor.Get(VendorNo) then
-            QualityVarianceSetup.SetRange("Setup Code", Vendor."Rating Setup Code")
-        else
-            QualityVarianceSetup.SetRange("Setup Code", 'DEFAULT');
-
-        DeliveryPerformance.SetFilter(PostingDate, DateFilter);
-        DeliveryPerformance.SetRange(BuyFromVendorNo, VendorNo);
-        DeliveryPerformance.Open();
-
-        while DeliveryPerformance.Read() do begin
-            TotalReceived += DeliveryPerformance.ReceivedQuantity;
-            TotalReturned += DeliveryPerformance.ReturnedQty;  // Using the correct field name
-        end;
-
-        if TotalReceived = 0 then
-            exit(0);
-
-        if TotalReturned = 0 then
-            exit(100);  // No returns = perfect score
-
-        ReturnPercentage := (TotalReturned / TotalReceived) * 100;
-
-        QualityVarianceSetup.SetFilter("Variance Percentage From", '<=%1', ReturnPercentage);
-        QualityVarianceSetup.SetFilter("Variance Percentage To", '>=%1', ReturnPercentage);
-
-        if QualityVarianceSetup.FindFirst() then
-            exit(QualityVarianceSetup.Score)
-        else
-            exit(0);
-    end;
-
     procedure CalculateQuantityScore(DocumentNo: Code[20]): Decimal
     var
         PurchRcptLine: Record "Purch. Rcpt. Line";
