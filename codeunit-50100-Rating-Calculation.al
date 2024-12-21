@@ -4,34 +4,21 @@ codeunit 50100 "Rating Calculation"
     var
         VendorRatingEntry: Record "Vendor Rating Entry";
         VendorRatingSetup: Record "Vendor Rating Setup";
-        RatingScoreCalculator: Codeunit "Rating Score Calculation";
-        RatingDataManagement: Codeunit "Rating Data Management";
         VendorRecord: Record Vendor;
-        TotalScore: Decimal;
-        AverageScore: Decimal;
+        RatingDataManagement: Codeunit "Rating Data Management";
         EntryCount: Integer;
         StartDate: Date;
         EndDate: Date;
     begin
-        // Get vendor and setup
         if not VendorRecord.Get(VendorNo) then
             Error('Vendor %1 not found', VendorNo);
 
-        // Change from using DEFAULT to using vendor's setup code
-        if not VendorRatingSetup.Get(VendorRecord."Rating Setup Code") then
-            VendorRatingSetup.Get('DEFAULT');
+        VendorRatingSetup := GetVendorSetup(VendorRecord."Rating Setup Code");
+        GetEvaluationDateRange(StartDate, EndDate);  // Using our helper regardless of DateFilter
 
-        // Set period dates based on monthly evaluation
-        EndDate := CalcDate('<CM>', WorkDate()); // End of current month
-        StartDate := CalcDate('<-CM>', EndDate); // Start of current month
-
-        // Reset points for this period before recalculating
         RatingDataManagement.ResetPeriodPoints(VendorNo, StartDate, EndDate);
-
-        // Clear existing history for this period
         RatingDataManagement.ClearExistingHistory(VendorNo, StartDate, EndDate);
 
-        // Calculate scores for entries in period
         VendorRatingEntry.Reset();
         VendorRatingEntry.SetRange("Vendor No", VendorNo);
         VendorRatingEntry.SetRange("Posting Date", StartDate, EndDate);
@@ -41,7 +28,6 @@ codeunit 50100 "Rating Calculation"
             Error('Minimum orders requirement not met. Found %1, Required %2',
                 EntryCount, VendorRatingSetup."Minimum Orders Required");
 
-        // Calculate average scores
         CalcAverageScores(
             VendorRatingEntry,
             StartDate,
@@ -64,9 +50,7 @@ codeunit 50100 "Rating Calculation"
         EndDate: Date;
         RatingDataManagement: Codeunit "Rating Data Management";
     begin
-        EndDate := WorkDate();
-        StartDate := CalcDate('<-1M>', EndDate);
-
+        GetEvaluationDateRange(StartDate, EndDate);
         RatingDataManagement.ClearExistingHistory(VendorNo, StartDate, EndDate);
         CalculateVendorRating(VendorNo, Format(StartDate) + '..' + Format(EndDate));
     end;
@@ -87,11 +71,7 @@ codeunit 50100 "Rating Calculation"
         TotalQuantityScore: Decimal;
         WeightedScore: Decimal;
     begin
-        // Remove the CalcFields since it's a regular field now
-        // VendorRecord.CalcFields("Rating Setup Code");  // Remove this line
-
-        if not VendorRatingSetup.Get(VendorRecord."Rating Setup Code") then
-            VendorRatingSetup.Get('DEFAULT');
+        VendorRatingSetup := GetVendorSetup(VendorRecord."Rating Setup Code");
 
         if VendorRatingEntry.FindSet() then
             repeat
@@ -100,21 +80,20 @@ codeunit 50100 "Rating Calculation"
                 TotalQuantityScore += VendorRatingEntry."Quantity Score";
             until VendorRatingEntry.Next() = 0;
 
-        // Calculate weighted averages
-        WeightedScore := (TotalScheduleScore / EntryCount * VendorRatingSetup."Schedule Weight") +
-                        (TotalQualityScore / EntryCount * VendorRatingSetup."Quality Weight") +
-                        (TotalQuantityScore / EntryCount * VendorRatingSetup."Quantity Weight");
-
+        WeightedScore := CalculateWeightedScore(
+            TotalScheduleScore / EntryCount,
+            TotalQualityScore / EntryCount,
+            TotalQuantityScore / EntryCount,
+            VendorRatingSetup
+        );
         WeightedScore := Round(WeightedScore, 0.01);
 
-        // Update vendor
         VendorRecord."Current Rating" := RatingScoreCalculator.DetermineRating(WeightedScore, VendorRecord."Rating Setup Code");
         VendorRecord."Last Evaluation Date" := Today;
         VendorRecord."YTD Average Score" := WeightedScore;
         VendorRecord."Trend Indicator" := RatingScoreCalculator.CalculateTrend(VendorNo);
         VendorRecord.Modify(true);
 
-        // Create history entry
         RatingDataManagement.CreateHistoryEntry(
             VendorNo,
             StartDate,
@@ -134,40 +113,29 @@ codeunit 50100 "Rating Calculation"
         RatingScoreCalculator: Codeunit "Rating Score Calculation";
         PurchRcptHeader: Record "Purch. Rcpt. Header";
         ScheduleScore: Decimal;
-        QualityScore: Decimal;
         QuantityScore: Decimal;
         TotalScore: Decimal;
-        Vendor: Record Vendor;
     begin
-        // Set correct Setup Code first
-        if Vendor.Get(VendorRatingEntry."Vendor No") then
-            VendorRatingEntry."Setup Code" := Vendor."Rating Setup Code";
+        VendorRatingSetup := GetVendorSetup(GetVendorSetupCode(VendorRatingEntry."Vendor No"));
+        VendorRatingEntry."Setup Code" := VendorRatingSetup."Setup Code";
 
-        if VendorRatingEntry."Setup Code" = '' then
-            VendorRatingEntry."Setup Code" := 'DEFAULT';
-
-        // Get the correct setup based on entry's Setup Code
-        if not VendorRatingSetup.Get(VendorRatingEntry."Setup Code") then
-            VendorRatingSetup.Get('DEFAULT');
-
-        // Calculate Schedule Score - using Receipt No instead of Document No
         ScheduleScore := RatingScoreCalculator.CalculateScheduleScore(VendorRatingEntry."Receipt No");
         VendorRatingEntry."Schedule Score" := ScheduleScore;
 
-        // Get Quality Score directly from receipt header instead of calculating
         if PurchRcptHeader.Get(VendorRatingEntry."Receipt No") then
             VendorRatingEntry."Quality Score" := PurchRcptHeader."Quality Score"
         else
             VendorRatingEntry."Quality Score" := 0;
 
-        // Calculate Quantity Score - using Receipt No instead of Document No
         QuantityScore := RatingScoreCalculator.CalculateQuantityScore(VendorRatingEntry."Receipt No");
         VendorRatingEntry."Quantity Score" := QuantityScore;
 
-        // Calculate weighted total score
-        TotalScore := (ScheduleScore * VendorRatingSetup."Schedule Weight") +
-                     (VendorRatingEntry."Quality Score" * VendorRatingSetup."Quality Weight") +
-                     (QuantityScore * VendorRatingSetup."Quantity Weight");
+        TotalScore := CalculateWeightedScore(
+            ScheduleScore,
+            VendorRatingEntry."Quality Score",
+            QuantityScore,
+            VendorRatingSetup
+        );
 
         VendorRatingEntry."Total Score" := Round(TotalScore, 0.01);
         VendorRatingEntry.Rating := RatingScoreCalculator.DetermineRating(TotalScore, VendorRatingEntry."Setup Code");
@@ -177,29 +145,37 @@ codeunit 50100 "Rating Calculation"
         VendorRatingEntry.Modify();
     end;
 
-    local procedure GetDateFilterRange(DateFilter: Text; var StartDate: Date; var EndDate: Date): Boolean
-    var
-        DateStrings: List of [Text];
+    local procedure GetVendorSetup(SetupCode: Code[20]) VendorRatingSetup: Record "Vendor Rating Setup"
     begin
-        if not DateFilter.Contains('..') then
-            exit(false);
+        if not VendorRatingSetup.Get(SetupCode) then
+            VendorRatingSetup.Get('DEFAULT');
+    end;
 
-        DateStrings := DateFilter.Split('..');
-        if DateStrings.Count <> 2 then
-            exit(false);
+    local procedure GetVendorSetupCode(VendorNo: Code[20]): Code[20]
+    var
+        Vendor: Record Vendor;
+    begin
+        if Vendor.Get(VendorNo) then
+            exit(Vendor."Rating Setup Code");
+        exit('DEFAULT');
+    end;
 
+    local procedure CalculateWeightedScore(
+        ScheduleScore: Decimal;
+        QualityScore: Decimal;
+        QuantityScore: Decimal;
+        VendorRatingSetup: Record "Vendor Rating Setup"): Decimal
+    begin
         exit(
-            Evaluate(StartDate, DateStrings.Get(1)) and
-            Evaluate(EndDate, DateStrings.Get(2))
+            (ScheduleScore * VendorRatingSetup."Schedule Weight") +
+            (QualityScore * VendorRatingSetup."Quality Weight") +
+            (QuantityScore * VendorRatingSetup."Quantity Weight")
         );
     end;
 
-    local procedure ValidateDateRange(var StartDate: Date; var EndDate: Date)
+    local procedure GetEvaluationDateRange(var StartDate: Date; var EndDate: Date)
     begin
-        if EndDate > WorkDate() then
-            EndDate := WorkDate();
-        if StartDate > EndDate then
-            StartDate := EndDate;
+        EndDate := CalcDate('<CM>', WorkDate());
+        StartDate := CalcDate('<-CM>', EndDate);
     end;
-
 }

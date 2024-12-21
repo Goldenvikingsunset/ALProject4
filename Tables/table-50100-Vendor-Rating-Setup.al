@@ -67,10 +67,47 @@ table 50100 "Vendor Rating Setup"
                     SetOtherSetupsNonDefault();
             end;
         }
-
+        // Benchmark Fields
+        field(50160; "Avg Schedule Score"; Decimal)
+        {
+            Caption = 'Average Schedule Score';
+            DecimalPlaces = 2;
+            Editable = false;
+        }
+        field(50161; "Avg Quality Score"; Decimal)
+        {
+            Caption = 'Average Quality Score';
+            DecimalPlaces = 2;
+            Editable = false;
+        }
+        field(50162; "Avg Quantity Score"; Decimal)
+        {
+            Caption = 'Average Quantity Score';
+            DecimalPlaces = 2;
+            Editable = false;
+        }
+        field(50163; "Avg Total Score"; Decimal)
+        {
+            Caption = 'Average Total Score';
+            DecimalPlaces = 2;
+            Editable = false;
+        }
+        field(50164; "Total Vendors"; Integer)
+        {
+            Caption = 'Total Vendors';
+            Editable = false;
+        }
+        field(50165; "Total Entries"; Integer)
+        {
+            Caption = 'Total Entries';
+            Editable = false;
+        }
+        field(50166; "Last Benchmark Date"; DateTime)
+        {
+            Caption = 'Last Benchmark Update';
+            Editable = false;
+        }
     }
-
-
 
     keys
     {

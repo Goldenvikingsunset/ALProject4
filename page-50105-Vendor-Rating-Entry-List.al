@@ -67,31 +67,49 @@ page 50105 "Vendor Rating Entry List"
                 {
                     ApplicationArea = All;
                     ToolTip = 'Shows the delivery schedule performance score.';
+
+                    trigger OnValidate()
+                    begin
+                        RecalculateScore();
+                    end;
                 }
                 field("Quality Score"; Rec."Quality Score")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Shows the quality performance score.';
+
+                    trigger OnValidate()
+                    begin
+                        RecalculateScore();
+                    end;
                 }
                 field("Quantity Score"; Rec."Quantity Score")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Shows the quantity accuracy score.';
+
+                    trigger OnValidate()
+                    begin
+                        RecalculateScore();
+                    end;
                 }
                 field("Total Score"; Rec."Total Score")
                 {
                     ApplicationArea = All;
                     ToolTip = 'Shows the overall weighted score.';
+                    Editable = false;
                 }
                 field(Rating; Rec.Rating)
                 {
                     ApplicationArea = All;
                     ToolTip = 'Shows the letter rating based on the total score.';
+                    Editable = false;
                 }
                 field(Points; Rec.Points)
                 {
                     ApplicationArea = All;
                     ToolTip = 'Shows the points earned for this entry.';
+                    Editable = false;
                 }
             }
         }
@@ -124,7 +142,6 @@ page 50105 "Vendor Rating Entry List"
                         HistProcessor.ProcessHistoricalTransactions(StartDate, EndDate);
                 end;
             }
-
         }
 
         area(Navigation)
@@ -147,5 +164,28 @@ page 50105 "Vendor Rating Entry List"
     begin
         Rec.SetCurrentKey("Posting Date");
         Rec.Ascending(false);
+    end;
+
+    local procedure RecalculateScore()
+    var
+        VendorRatingSetup: Record "Vendor Rating Setup";
+        RatingScoreCalc: Codeunit "Rating Score Calculation";
+        TotalScore: Decimal;
+    begin
+        // Get setup weights
+        if not VendorRatingSetup.Get(Rec."Setup Code") then
+            VendorRatingSetup.Get('DEFAULT');
+
+        // Calculate weighted total score
+        TotalScore := Round(
+            (Rec."Schedule Score" * VendorRatingSetup."Schedule Weight") +
+            (Rec."Quality Score" * VendorRatingSetup."Quality Weight") +
+            (Rec."Quantity Score" * VendorRatingSetup."Quantity Weight"),
+            0.01);
+
+        Rec.Validate("Total Score", TotalScore);
+        Rec.Validate(Rating, RatingScoreCalc.DetermineRating(TotalScore, Rec."Setup Code"));
+        RatingScoreCalc.CalculateEntryPoints(Rec);
+        Rec.Modify(true);
     end;
 }

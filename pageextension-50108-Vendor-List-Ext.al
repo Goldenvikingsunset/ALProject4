@@ -36,6 +36,12 @@ pageextension 50108 "Vendor List Ext" extends "Vendor List"
                 ApplicationArea = All;
                 Editable = false;
             }
+            field("Rating Setup Code"; Rec."Rating Setup Code")
+            {
+                Caption = 'Rating Setup Code';
+                ApplicationArea = All;
+                Editable = false;
+            }
         }
 
 

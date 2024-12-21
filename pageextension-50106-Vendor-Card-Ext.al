@@ -118,6 +118,25 @@ pageextension 50106 "Vendor Card Ext" extends "Vendor Card"
                     );
                 end;
             }
+            action(CalculateHistoricalRating)
+            {
+                ApplicationArea = All;
+                Caption = 'Calculate Historical Ratings';
+                Image = CalculateBalanceAccount;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedOnly = true;
+
+                trigger OnAction()
+                var
+                    HistRatingReport: Report "Calculate Historical Ratings";
+                    Vendor: Record Vendor;
+                begin
+                    Vendor.SetRange("No.", Rec."No.");
+                    HistRatingReport.SetTableView(Vendor);
+                    HistRatingReport.RunModal();
+                end;
+            }
         }
     }
 }

@@ -89,18 +89,86 @@ page 50100 "Vendor Rating Setup Card"
                     Editable = true;
                 }
             }
+
+            group(Benchmarks)
+            {
+                Caption = 'Benchmark Statistics';
+
+                field("Avg Schedule Score"; Rec."Avg Schedule Score")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Average Schedule Score';
+                    StyleExpr = ScheduleStyle;
+                    ToolTip = 'Shows the average schedule performance score across all vendors in this setup';
+                }
+                field("Avg Quality Score"; Rec."Avg Quality Score")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Average Quality Score';
+                    StyleExpr = QualityStyle;
+                    ToolTip = 'Shows the average quality score across all vendors in this setup';
+                }
+                field("Avg Quantity Score"; Rec."Avg Quantity Score")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Average Quantity Score';
+                    StyleExpr = QuantityStyle;
+                    ToolTip = 'Shows the average quantity accuracy score across all vendors in this setup';
+                }
+                field("Avg Total Score"; Rec."Avg Total Score")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Average Total Score';
+                    StyleExpr = TotalStyle;
+                    ToolTip = 'Shows the average overall performance score across all vendors in this setup';
+                }
+                field("Total Vendors"; Rec."Total Vendors")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Shows the total number of vendors using this rating setup';
+                }
+                field("Total Entries"; Rec."Total Entries")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Shows the total number of rating entries for this setup';
+                }
+                field("Last Benchmark Date"; Rec."Last Benchmark Date")
+                {
+                    ApplicationArea = All;
+                    Caption = 'Last Updated';
+                    ToolTip = 'Shows when the benchmark data was last updated';
+                }
+            }
         }
     }
 
     actions
     {
-
         area(Navigation)
         {
             group(RelatedSetup)
             {
                 Caption = 'Related Setup';
                 Image = Setup;
+
+                action(UpdateBenchmarks)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Update Benchmarks';
+                    Image = Refresh;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    PromotedIsBig = true;
+                    ToolTip = 'Update the benchmark data for this rating setup';
+
+                    trigger OnAction()
+                    var
+                        BenchmarkMgt: Codeunit "Benchmark Management";
+                    begin
+                        BenchmarkMgt.UpdateBenchmarks(Rec."Setup Code");
+                        CurrPage.Update(false);
+                    end;
+                }
 
                 action(RatingScales)
                 {
@@ -176,4 +244,33 @@ page 50100 "Vendor Rating Setup Card"
             }
         }
     }
+
+    var
+        ScheduleStyle: Text;
+        QualityStyle: Text;
+        QuantityStyle: Text;
+        TotalStyle: Text;
+
+    trigger OnAfterGetRecord()
+    begin
+        SetStyles();
+    end;
+
+    local procedure SetStyles()
+    begin
+        ScheduleStyle := GetScoreStyle(Rec."Avg Schedule Score");
+        QualityStyle := GetScoreStyle(Rec."Avg Quality Score");
+        QuantityStyle := GetScoreStyle(Rec."Avg Quantity Score");
+        TotalStyle := GetScoreStyle(Rec."Avg Total Score");
+    end;
+
+    local procedure GetScoreStyle(Score: Decimal): Text
+    begin
+        if Score >= 90 then
+            exit('Favorable')
+        else if Score >= 70 then
+            exit('Ambiguous')
+        else
+            exit('Unfavorable');
+    end;
 }

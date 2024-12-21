@@ -21,6 +21,9 @@ codeunit 50104 "Rating Score Calculation"
         if not PurchRcptLine.FindFirst() then
             exit(0);
 
+        if PurchRcptLine."Expected Receipt Date" = 0D then
+            exit(0);
+
         // Calculate days late (negative means early)
         DaysLate := PurchRcptHeader."Posting Date" - PurchRcptLine."Expected Receipt Date";
 
@@ -52,8 +55,8 @@ codeunit 50104 "Rating Score Calculation"
 
         // Find original purchase order line
         if not PurchLine.Get(PurchLine."Document Type"::Order,
-                            PurchRcptLine."Order No.",
-                            PurchRcptLine."Order Line No.") then
+            PurchRcptLine."Order No.",
+            PurchRcptLine."Order Line No.") then
             exit(0);
 
         if PurchLine.Quantity = 0 then
@@ -78,6 +81,7 @@ codeunit 50104 "Rating Score Calculation"
         else
             exit(0);
     end;
+
 
     procedure DetermineRating(Score: Decimal; SetupCode: Code[20]): Text[30]
     var
